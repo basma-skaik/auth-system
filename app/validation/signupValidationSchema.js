@@ -9,21 +9,6 @@ const signupValidationSchema = Joi.object({
     "string.min": "Full name should be at least 3 characters",
   }),
 
-  email: Joi.string().email().required().messages({
-    "string.email": "Please enter a valid email",
-    "string.empty": "Email is required",
-  }),
-
-  password: Joi.string().min(6).required().messages({
-    "string.min": "Password must be at least 6 characters",
-    "string.empty": "Password is required",
-  }),
-
-  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
-    "any.only": "Passwords do not match",
-    "string.empty": "Confirm password is required",
-  }),
-
   phone: Joi.string().pattern(phoneRegex).required().messages({
     "string.pattern.base":
       "Phone number must be in WhatsApp international format, e.g., +972599123456",

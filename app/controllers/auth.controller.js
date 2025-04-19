@@ -1,27 +1,34 @@
 const db = require("../../db/models");
 const config = require("../../config/auth.config");
 const User = db.User;
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { blacklistToken } = require("../middlewares/authJwt");
 const Errors = require("../utils/customErrors");
-const { sendEmail } = require("../utils/emailSender");
+const { message } = require("../validation/signupValidationSchema");
 
 // Signup Controller
 exports.signup = async (req, res) => {
   try {
+    const { fullName, phone, acceptedPolicy } = req.body;
+
+    if (!fullName || !phone || !acceptedPolicy) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
+
+    const existingUser = await User.findOne({ where: { phone } });
+    if (existingUser) {
+      return res.status(400).send({ message: "Phone already registered" });
+    }
+
     const user = await User.create({
       fullName: req.body.fullName,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 10),
       phone: req.body.phone,
-      role: req.body.role,
       isVerified: false,
     });
 
     res.status(201).send({
-      message: `User registered successfully with email: ${user.email} !`,
+      message: `User registered successfully with phone: ${user.phone} ! Waiting for admin approval.`,
     });
   } catch (error) {
     res.status(500).send({
@@ -32,25 +39,36 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body;
+    const { phone, code, rememberMe } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    if (!code && !phone) {
+      return res.status(400).json({ message: "Code and phone are required." });
+    }
+
+    const user = await User.findOne({
+      where: { phone, verificationCode: code },
+    });
 
     if (!user) {
-      return res.status(404).send({ message: `User ${email} Not found!` });
+      const error = Errors.NotFoundError("User", phone);
+      return res.status(error.status).send({ message: error.message });
     }
 
     if (!user.isVerified) {
       return res.status(403).send({ message: "Account not verified!" });
     }
-
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
-
-    if (!passwordIsValid) {
-      return res
-        .status(401)
-        .send({ accessToken: null, message: "Invalid Password!" });
+    if (user.verificationCode !== code) {
+      return res.status(400).send({ message: "Invalid code" });
     }
+    if (Date.now() > user.verificationCodeExpires.getTime()) {
+      return res.status(400).send({ message: "Code expired" });
+    }
+
+    user.isVerified = true;
+    // Clear the code after successful login (optional)
+    user.verificationCode = null;
+    user.verificationCodeExpires = null;
+    await user.save();
 
     // Generate a JWT token
     const token = jwt.sign({ id: user.userId }, config.secret, {
@@ -67,9 +85,10 @@ exports.login = async (req, res) => {
       .send({
         id: user.userId,
         fullName: user.fullName,
-        email: user.email,
         phone: user.phone,
+        verificationCode: code,
         accessToken: token,
+        message: "User logged in successfully and got verified!",
       });
   } catch (error) {
     res.status(500).send({
@@ -91,93 +110,4 @@ exports.logout = (req, res) => {
   blacklistToken(token);
 
   return res.status(200).send({ message: "Logged out successfully." });
-};
-
-exports.verifyCode = async (req, res) => {
-  try {
-    const { email, code } = req.body;
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      const error = Errors.NotFoundError("User", userId);
-      return res.status(error.status).send({ message: error.message });
-    }
-
-    if (user.verificationCode !== code) {
-      return res.status(400).send({ message: "Invalid code" });
-    }
-    if (Date.now() > user.verificationCodeExpires.getTime()) {
-      return res.status(400).send({ message: "Code expired" });
-    }
-
-    await user.update({
-      isVerified: true,
-      verificationCode: null,
-      verificationCodeExpires: null,
-    });
-
-    res.status(200).send({ message: "Account verified successfully!" });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-};
-
-exports.requestResetCode = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      const error = Errors.NotFoundError("User", email);
-      return res.status(error.status).send({ message: error.message });
-    }
-
-    const resetCode = crypto.randomInt(100000, 999999).toString();
-    const expires = new Date(Date.now() + 10 * 60000); // 10 minutes
-
-    await user.update({
-      verificationCode: resetCode,
-      verificationCodeExpires: expires,
-    });
-
-    await sendEmail(
-      user.email,
-      "Your Password Reset Code",
-      `Your Password Reset Code code is: ${resetCode}`
-    );
-
-    res.status(200).send({ message: "Reset code sent to your email" });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-};
-
-exports.resetPassword = async (req, res) => {
-  try {
-    const { email, code, newPassword } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      const error = Errors.NotFoundError("User", email);
-      return res.status(error.status).send({ message: error.message });
-    }
-
-    if (user.verificationCode !== code) {
-      return res.status(400).send({ message: "Invalid reset code" });
-    }
-
-    if (Date.now() > new Date(user.verificationCodeExpires)) {
-      return res.status(400).send({ message: "Reset code expired" });
-    }
-
-    await user.update({
-      password: bcrypt.hashSync(newPassword, 10),
-      verificationCode: null,
-      verificationCodeExpires: null,
-    });
-
-    res.status(200).send({ message: "Password has been reset successfully!" });
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
 };

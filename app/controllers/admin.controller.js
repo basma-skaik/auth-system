@@ -2,15 +2,15 @@ const db = require("../../db/models");
 const User = db.User;
 const Student = db.Student;
 const Errors = require("../utils/customErrors");
-const { sendEmail } = require("../utils/emailSender");
+const { sendWhatsAppOTP } = require("../utils/whatsapp");
 
-exports.sendVerificationCode = async (req, res) => {
+exports.sendLoginCode = async (req, res) => {
   try {
-    const userId = req.params.userId; //user that the admin will approve him
-    const user = await User.findByPk(userId);
+    const { phone } = req.body;
+    const user = await User.findOne({ where: { phone } });
 
     if (!user) {
-      const error = Errors.NotFoundError("User", userId);
+      const error = Errors.NotFoundError("User", user.userId);
       return res.status(error.status).send({ message: error.message });
     }
 
@@ -24,7 +24,9 @@ exports.sendVerificationCode = async (req, res) => {
       return res.status(error.status).send({ message: error.message });
     }
 
-    const existingStudent = await Student.findOne({ where: { userId } });
+    const existingStudent = await Student.findOne({
+      where: { userId: user.userId },
+    });
     if (existingStudent) {
       const error = Errors.DuplicateUserError(user.userId);
       return res.status(error.status).send({ message: error.message });
@@ -45,14 +47,12 @@ exports.sendVerificationCode = async (req, res) => {
       verificationCodeExpires: expires,
     });
 
-    await sendEmail(
-      user.email,
-      "Verification code",
-      `Your Verification code is: ${code}`
-    );
+    // Send code via WhatsApp
+    const message = `Your Simplify login code is: ${code}`;
+    await sendWhatsAppOTP(phone, message);
 
     res.status(200).send({
-      message: `Verification code sent successfully! ${code}`,
+      message: `Login code sent via WhatsApp successfully! ${code}`,
     });
   } catch (err) {
     const error = Errors.InternalServerError(err);

@@ -15,16 +15,6 @@ module.exports = {
         allowNull: true,
         field: "location",
       },
-      jobTitle: {
-        type: Sequelize.STRING,
-        allowNull: true,
-        field: "job_title",
-      },
-      company: {
-        type: Sequelize.STRING,
-        allowNull: true,
-        field: "company",
-      },
       industry: {
         type: Sequelize.STRING,
         allowNull: true,

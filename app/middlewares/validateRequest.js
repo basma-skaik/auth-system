@@ -8,7 +8,6 @@ const validateSignup = (req, res, next) => {
       message: error.details[0].message, // Return the first validation error message
     });
   }
-
   // If validation passes, proceed to the next middleware
   next();
 };
@@ -20,7 +19,6 @@ const validateLogin = (req, res, next) => {
       message: error.details[0].message, // Return the first validation error message
     });
   }
-
   // If validation passes, proceed to the next middleware
   next();
 };

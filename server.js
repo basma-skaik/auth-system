@@ -3,7 +3,6 @@ const cors = require("cors");
 require("dotenv").config();
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
-const passport = require("./config/passport");
 
 const authRoutes = require("./app/routes/auth.routes");
 const adminRoutes = require("./app/routes/admin.routes");
@@ -20,9 +19,6 @@ app.use(
     saveUninitialized: true,
   })
 );
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(
   cors({

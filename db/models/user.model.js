@@ -14,23 +14,9 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       field: "full_name",
     },
-    email: {
-      type: Sequelize.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true,
-      },
-      field: "email",
-    },
-    password: {
-      type: Sequelize.STRING,
-      allowNull: false,
-      field: "password",
-    },
     phone: {
       type: Sequelize.STRING,
-      allowNull: true,
+      allowNull: false,
       field: "phone",
     },
     role: {
