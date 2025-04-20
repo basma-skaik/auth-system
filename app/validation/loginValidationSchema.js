@@ -9,6 +9,12 @@ const loginValidationSchema = Joi.object({
       "Phone number must be in WhatsApp international format, e.g., +972599123456",
     "string.empty": "Phone number is required",
   }),
+
+  password: Joi.string().min(6).required().messages({
+    "string.min": "Password must be at least 6 characters",
+    "string.empty": "Password is required",
+  }),
+
   rememberMe: Joi.boolean().optional(),
 });
 

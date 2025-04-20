@@ -19,6 +19,7 @@ db.sequelize = sequelize;
 
 db.User = require("./user.model")(sequelize, Sequelize);
 db.Student = require("./student.model")(sequelize, Sequelize);
+db.Loginlog = require("./login-log.model")(sequelize, Sequelize);
 
 // Establish relationships
 

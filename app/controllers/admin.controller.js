@@ -2,12 +2,11 @@ const db = require("../../db/models");
 const User = db.User;
 const Student = db.Student;
 const Errors = require("../utils/customErrors");
-const { sendWhatsAppOTP } = require("../utils/whatsapp");
 
-exports.sendLoginCode = async (req, res) => {
+exports.verifyUser = async (req, res) => {
   try {
-    const { phone } = req.body;
-    const user = await User.findOne({ where: { phone } });
+    const userId = req.params.userId;
+    const user = await User.findOne({ where: { userId } });
 
     if (!user) {
       const error = Errors.NotFoundError("User", user.userId);
@@ -38,21 +37,11 @@ exports.sendLoginCode = async (req, res) => {
       updatedBy: process.env.ADMIN_ID,
     });
 
-    // generate code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    await user.update({
-      verificationCode: code,
-      verificationCodeExpires: expires,
-    });
-
-    // Send code via WhatsApp
-    const message = `Your Simplify login code is: ${code}`;
-    await sendWhatsAppOTP(phone, message);
+    user.isVerified = true;
+    await user.save();
 
     res.status(200).send({
-      message: `Login code sent via WhatsApp successfully! ${code}`,
+      message: `User verified successfully!`,
     });
   } catch (err) {
     const error = Errors.InternalServerError(err);

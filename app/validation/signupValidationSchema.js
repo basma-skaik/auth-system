@@ -8,6 +8,15 @@ const signupValidationSchema = Joi.object({
     "string.empty": "Full name is required",
     "string.min": "Full name should be at least 3 characters",
   }),
+  password: Joi.string().min(6).required().messages({
+    "string.min": "Password must be at least 6 characters",
+    "string.empty": "Password is required",
+  }),
+
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Passwords do not match",
+    "string.empty": "Confirm password is required",
+  }),
 
   phone: Joi.string().pattern(phoneRegex).required().messages({
     "string.pattern.base":

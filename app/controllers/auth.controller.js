@@ -1,29 +1,27 @@
 const db = require("../../db/models");
 const config = require("../../config/auth.config");
 const User = db.User;
+const Loginlog = db.Loginlog;
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const { blacklistToken } = require("../middlewares/authJwt");
 const Errors = require("../utils/customErrors");
-const { message } = require("../validation/signupValidationSchema");
 
 // Signup Controller
 exports.signup = async (req, res) => {
   try {
-    const { fullName, phone, acceptedPolicy } = req.body;
-
-    if (!fullName || !phone || !acceptedPolicy) {
-      return res.status(400).send({ message: "All fields are required" });
-    }
+    const { fullName, phone, password } = req.body;
 
     const existingUser = await User.findOne({ where: { phone } });
     if (existingUser) {
-      return res.status(400).send({ message: "Phone already registered" });
+      return res.status(400).send({ message: "User already registered" });
     }
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     const user = await User.create({
-      fullName: req.body.fullName,
-      phone: req.body.phone,
+      fullName,
+      password: hashedPassword,
+      phone,
       isVerified: false,
     });
 
@@ -39,15 +37,9 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { phone, code, rememberMe } = req.body;
+    const { phone, password, rememberMe } = req.body;
 
-    if (!code && !phone) {
-      return res.status(400).json({ message: "Code and phone are required." });
-    }
-
-    const user = await User.findOne({
-      where: { phone, verificationCode: code },
-    });
+    const user = await User.findOne({ where: { phone } });
 
     if (!user) {
       const error = Errors.NotFoundError("User", phone);
@@ -57,18 +49,31 @@ exports.login = async (req, res) => {
     if (!user.isVerified) {
       return res.status(403).send({ message: "Account not verified!" });
     }
-    if (user.verificationCode !== code) {
-      return res.status(400).send({ message: "Invalid code" });
-    }
-    if (Date.now() > user.verificationCodeExpires.getTime()) {
-      return res.status(400).send({ message: "Code expired" });
+
+    const passwordIsValid = bcrypt.compareSync(password, user.password);
+
+    if (!passwordIsValid) {
+      return res
+        .status(401)
+        .send({ accessToken: null, message: "Invalid Password!" });
     }
 
-    user.isVerified = true;
-    // Clear the code after successful login (optional)
-    user.verificationCode = null;
-    user.verificationCodeExpires = null;
-    await user.save();
+    // ✅ Log device info
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] || // handles proxy chains
+      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
+      req.connection?.socket?.remoteAddress;
+    const userAgent = req.headers["user-agent"];
+    console.log(`Login from IP: ${ip}, User-Agent: ${userAgent}`);
+    console.log("Full headers:", req.headers);
+
+    await Loginlog.create({
+      userId: user.userId,
+      ipAddress: ip,
+      userAgent,
+      loginTime: new Date(),
+    });
 
     // Generate a JWT token
     const token = jwt.sign({ id: user.userId }, config.secret, {
@@ -86,7 +91,6 @@ exports.login = async (req, res) => {
         id: user.userId,
         fullName: user.fullName,
         phone: user.phone,
-        verificationCode: code,
         accessToken: token,
         message: "User logged in successfully and got verified!",
       });

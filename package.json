@@ -29,6 +29,7 @@
     "passport-google-oauth20": "^2.0.0",
     "postmanify-express": "^2.2.1",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "wbm": "^1.1.16"
   }
 }

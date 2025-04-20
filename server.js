@@ -14,11 +14,13 @@ app.use(cookieParser());
 
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: process.env.SESSION_SECRET_kEY,
     resave: false,
     saveUninitialized: true,
   })
 );
+
+app.set("trust proxy", true);
 
 app.use(
   cors({

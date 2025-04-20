@@ -4,9 +4,9 @@ const { authJwt } = require("../middlewares");
 const adminController = require("../controllers/admin.controller");
 
 router.post(
-  "/send-login-code",
+  "/verify-user/:userId",
   [authJwt.verifyToken, authJwt.checkAdmin],
-  adminController.sendLoginCode
+  adminController.verifyUser
 );
 
 module.exports = router;

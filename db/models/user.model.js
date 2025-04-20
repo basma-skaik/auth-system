@@ -14,6 +14,11 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       field: "full_name",
     },
+    password: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      field: "password",
+    },
     phone: {
       type: Sequelize.STRING,
       allowNull: false,
@@ -30,16 +35,6 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       defaultValue: false,
       field: "is_verified",
-    },
-    verificationCode: {
-      type: Sequelize.STRING(6),
-      allowNull: true,
-      field: "verification_code",
-    },
-    verificationCodeExpires: {
-      type: Sequelize.DATE,
-      allowNull: true,
-      field: "verification_code_expires",
     },
     createdAt: {
       type: Sequelize.DATE,
