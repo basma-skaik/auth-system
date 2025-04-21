@@ -22,5 +22,14 @@ db.Student = require("./student.model")(sequelize, Sequelize);
 db.Loginlog = require("./login-log.model")(sequelize, Sequelize);
 
 // Establish relationships
+db.User.hasOne(db.Student, {
+  foreignKey: "userId",
+  as: "studentProfile",
+});
+
+db.Student.belongsTo(db.User, {
+  foreignKey: "userId",
+  as: "user",
+});
 
 module.exports = db;

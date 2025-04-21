@@ -7,7 +7,6 @@ const jwt = require("jsonwebtoken");
 const { blacklistToken } = require("../middlewares/authJwt");
 const Errors = require("../utils/customErrors");
 
-// Signup Controller
 exports.signup = async (req, res) => {
   try {
     const { fullName, phone, password } = req.body;

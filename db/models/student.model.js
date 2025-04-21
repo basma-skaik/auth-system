@@ -7,45 +7,35 @@ module.exports = (sequelize, Sequelize) => {
       autoIncrement: true,
       field: "student_id",
     },
+    bio: {
+      type: Sequelize.STRING(300),
+      allowNull: true,
+      field: "bio",
+    },
+    level: {
+      type: Sequelize.STRING,
+      allowNull: true,
+      field: "level",
+    },
+    futureSpeciality: {
+      type: Sequelize.STRING,
+      allowNull: true,
+      field: "future_speciality",
+    },
+    instagram: {
+      type: Sequelize.STRING,
+      allowNull: true,
+      field: "instagram",
+    },
     location: {
       type: Sequelize.STRING,
       allowNull: true,
       field: "location",
     },
-    industry: {
+    organization: {
       type: Sequelize.STRING,
       allowNull: true,
-      field: "industry",
-    },
-    language: {
-      type: Sequelize.STRING,
-      allowNull: true,
-      defaultValue: "English",
-      field: "language",
-    },
-    timeZone: {
-      type: Sequelize.STRING,
-      allowNull: true,
-      field: "time_zone",
-    },
-    notifyAccountUpdates: {
-      type: Sequelize.BOOLEAN,
-      defaultValue: true,
-      field: "notify_account_updates",
-    },
-    notifyProductNews: {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
-      field: "notify_product_news",
-    },
-    notifyMarketing: {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
-      field: "notify_marketing",
-    },
-    bio: {
-      type: Sequelize.STRING(200),
-      allowNull: true,
+      field: "organization",
     },
     userId: {
       type: Sequelize.INTEGER,

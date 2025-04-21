@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./app/routes/auth.routes");
 const adminRoutes = require("./app/routes/admin.routes");
+const studentRoutes = require("./app/routes/student.routes");
 
 const app = express();
 
@@ -41,6 +42,7 @@ db.sequelize.sync({ force: false });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/student", studentRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

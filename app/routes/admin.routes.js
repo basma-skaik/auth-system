@@ -9,4 +9,9 @@ router.post(
   adminController.verifyUser
 );
 
+router.get(
+  "/test-relationship/:userId",
+  [authJwt.verifyToken, authJwt.checkAdmin],
+  adminController.testRelationship
+);
 module.exports = router;

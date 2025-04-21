@@ -50,3 +50,19 @@ exports.verifyUser = async (req, res) => {
       .send({ message: error.message, details: error.details });
   }
 };
+
+exports.testRelationship = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findByPk(userId, {
+      include: ["studentProfile"],
+    });
+    console.log(user.studentProfile);
+    res.status(200).send("relationship is correct!");
+  } catch (err) {
+    const error = Errors.InternalServerError(err);
+    return res
+      .status(error.status)
+      .send({ message: error.message, details: error.details });
+  }
+};
